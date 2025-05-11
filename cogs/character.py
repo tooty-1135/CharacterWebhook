@@ -5,7 +5,6 @@ from typing import Union
 
 import aiohttp
 import discord
-from Tools.scripts.make_ctype import values
 from discord.ext import commands
 from discord import app_commands, Webhook
 import sqlite3
@@ -21,7 +20,7 @@ async def character_autocomplete(interaction: discord.Interaction, current: str,
         'SELECT name, prefix FROM characters WHERE uid = ? AND channel = ?',
         (str(interaction.user.id), str(interaction.channel.id),))
     db_characters = cursor.fetchall()
-
+    conn.close()
     # name:"{name}({prefix})", value:"{channel_id} {name}"
     return [
         app_commands.Choice(name=f"{character[0]}({character[1]})", value=character[0])
@@ -144,7 +143,7 @@ class character_wh(commands.Cog, description="將訊息轉換爲角色説出的�
 
                         try:
                             await send_msg()
-                        except:
+                        except discord.NotFound:
                             await updateWebhook(message.channel)
                             await send_msg()
 
@@ -158,7 +157,7 @@ class character_wh(commands.Cog, description="將訊息轉換爲角色説出的�
                            cha_pf_image="角色的頭像", cha_channel="角色所在的頻道")
     async def add_character(self, interaction: discord.Interaction, cha_name: str,
                             cha_prefix: app_commands.Range[str, 1, 3],
-                            cha_channel: Union[discord.Thread, discord.TextChannel] = None,
+                            cha_channel: Union[discord.ForumChannel, discord.TextChannel] = None,
                             cha_pf_image: discord.Attachment = None):
 
         if not re.search(r"[^a-zA-Z0-9]", prefix):
@@ -240,6 +239,10 @@ class character_wh(commands.Cog, description="將訊息轉換爲角色説出的�
                 set_clauses.append(f"{column} = ?")
                 values.append(value)
 
+        if not values:
+            await interaction.response.send_message("至少要更改一項參數", ephemeral=True)
+            return
+
         values.extend([str(interaction.user.id), str(interaction.channel_id), str(character)])
 
         cursor.execute(f'UPDATE characters SET {", ".join(set_clauses)} WHERE uid = ? AND channel = ? AND name = ?',
@@ -249,7 +252,7 @@ class character_wh(commands.Cog, description="將訊息轉換爲角色説出的�
             await interaction.response.send_message("找不到符合條件的資料", ephemeral=True)
             print("找不到符合條件的資料，沒有更新任何內容")
         else:
-            await interaction.response.send_message("成功刪除資料", ephemeral=True)
+            await interaction.response.send_message("成功更新資料", ephemeral=True)
             print("成功更新資料")
             conn.commit()
 
@@ -275,7 +278,7 @@ class character_wh(commands.Cog, description="將訊息轉換爲角色説出的�
             await interaction.response.send_message("找不到符合條件的資料", ephemeral=True)
             print("找不到符合條件的資料，沒有更新任何內容")
         else:
-            await interaction.response.send_message("成功更新資料", ephemeral=True)
+            await interaction.response.send_message("刪除角色成功", ephemeral=True)
             print("成功更新資料")
             conn.commit()
 
