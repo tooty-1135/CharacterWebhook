@@ -12,8 +12,8 @@ import dotenv
 dotenv.load_dotenv('.env')
 
 owners = [881312396784840744]
-intents = discord.Intents().all()
-intents.presences = False
+intents = discord.Intents().default()
+intents.message_content = True
 activity = discord.Activity(type=discord.ActivityType.playing, name="施放星爆氣流斬！")
 
 
