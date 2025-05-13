@@ -1,4 +1,4 @@
 aiohttp~=3.11.18
-discord.py~=2.4.0
+PyMySQL~=1.1.1
+aiomysql~=0.2.0
 python-dotenv~=1.0.1
-aiomysql
